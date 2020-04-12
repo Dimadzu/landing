@@ -4,6 +4,8 @@ var pug = require('gulp-pug');
 var sass = require('gulp-sass');
 var spritesmith = require('gulp.spritesmith');
 var rimraf = require('rimraf');
+var rename = require("gulp-rename");
+var autoprefixer = require('gulp-autoprefixer');
 
 
 // Static server
@@ -30,7 +32,8 @@ gulp.task('templates:compile', function buildHTML() {
 // Styles Compile
 gulp.task('styles:compile', function () {
   return gulp.src('source/styles/main.scss')
-    .pipe(sass().on('error', sass.logError))
+    .pipe(sass({outputStyle: 'compressed'}).on('error', sass.logError))
+    .pipe(rename("main.min.css"))
     .pipe(gulp.dest('build/css'));
 });
 
@@ -71,12 +74,21 @@ gulp.task('watch', function () {
   gulp.watch('source/template/**/*.pug', gulp.series('templates:compile'));
   gulp.watch('source/styles/**/*.scss', gulp.series('styles:compile'));
 });
+//Autoprefix
+gulp.task('autoprefix', () =>
+    gulp.src('build/css/main.min.css')
+        .pipe(autoprefixer({
+            browsers: ['last 2 versions'],
+            cascade: false
+        }))
+        .pipe(gulp.dest('build/css'))
+);
 
 
 // Default
 gulp.task('default', gulp.series(
     'clean',
     gulp.parallel('templates:compile', 'styles:compile', 'sprite', 'copy'),
-    gulp.parallel('watch', 'server')
+    gulp.parallel('watch', 'server', 'autoprefix')
   )
 );
